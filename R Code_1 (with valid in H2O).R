@@ -154,6 +154,7 @@ inf_g <- information.gain(Activity~., train_data)
 inf_gain <- cbind.data.frame(new_names, inf_g, stringsAsFactors=F)
 names(inf_gain) <- c("vars", "ratio")
 row.names(inf_gain) <- NULL
+
 ## arrange by ratio descending and plot top-20 variables
 inf_gain <- inf_gain[order(inf_gain$ratio, decreasing=TRUE),]
 dotplot(factor(vars, levels=rev(inf_gain[1:20,1])) ~ ratio,
@@ -174,6 +175,7 @@ legend("topright", pch=20, col=activity_names[,1],
 
 ## select variables (igr cutoff) ################
 vars <- inf_gain$vars[1:547]
+
 ## SVM with best igr variables ##################
 ## for parallel processing
 # library(doMC) # don't use for Windows
@@ -267,9 +269,6 @@ str(har.df)
 har2.df <- test_data[,-1]
 autoplot(prcomp(har2.df), data = test_data, color = 'red') 
 
-## (To here)
-
-
 
 ## RF with pca data #######################################
 
@@ -319,7 +318,7 @@ library(h2o)
 
 ## start a local h2o cluster
 localH2O = h2o.init(max_mem_size = '6g', # use 6GB of RAM of *GB available
-                    nthreads = -1) # use all CPUs (8 on my personal computer :3)
+                    nthreads = -1) 
 
 ## MNIST data as H2O
 # not used pca_train_data[,1] = as.factor(mnist_train[,1]) # convert digit labels to factor for classification
@@ -385,9 +384,6 @@ model3 = h2o.deeplearning(x = 2:562,  # column numbers for predictors  ## ** cha
                           variable_importance=T,
                           epochs = 15) # no. of epochs
 
-
-
-
 ## print confusion matrix
 h2o.confusionMatrix(model)
 
@@ -421,53 +417,3 @@ h2o.confusionMatrix(h2o_y_test)
 
 # other way of looking at performance
 h2o.performance(model2, test_h2o=test)
-
-
-# === Not done
-## convert H2O format into data frame and  save as csv
-df_y_test = as.data.frame(h2o_y_test)
-df_y_test = data.frame(ActivityId = seq(1,length(df_y_test$predict)), Label = df_y_test$predict)
-write.csv(df_y_test, file = "HAR_submission.csv", row.names=F)
-#===
-
-##Gradient Boosting in H2o 
-
-
-GBmodel1 = h2o.gbm(x = 2:562,  # column numbers for predictors  ## * Changes x= 2:562 on 07/06/2016 from 2:98
-                          y = 1,   # column number for label
-                          training_frame = train, # data in H2O format
-                          validation_frame = valid,
-                          ntrees = 30,
-                          max_depth = 5,
-                          min_rows = 10,
-                          balance_classes = TRUE,
-                          score_each_iteration = TRUE
-                          )
-
-summary(GBmodel1)
-h2o.confusionMatrix(GBmodel1)
-plot(GBmodel1)
-h2o.hit_ratio_table(GBmodel1, valid=T)[1,2]  ## Overall accuracy
-#GBmodel1@model
-GBmodel1.fit = h2o.predict(object= GBmodel1, newdata= test_h2o)
-summary(GBmodel1.fit)
-#all_params = lapply(GBmodel1@model, function(x) {x@model$params})
-
-# Variable importance
-gbm.VI <- GBmodel1@model$varimp
-print(gbm.VI)
-
-##### Naive Bayes
-NBmodel1 = h2o.naiveBayes(x = 2:562,  # column numbers for predictors
-                          y = 1,   # column number for label
-                          training_frame = train_h2o, # data in H2O format,
-                          laplace=3)
-
-h2o.confusionMatrix(NBmodel1)
-plot(NBmodel1)
-NBmodel1.fit = h2o.predict(object= NBmodel1, newdata= test_h2o)
-summary(NBmodel1.fit)
-print(NBmodel1.fit)
-
-## shut down virutal H2O cluster
-h2o.shutdown(prompt = F)
