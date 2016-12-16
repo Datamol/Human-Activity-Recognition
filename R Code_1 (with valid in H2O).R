@@ -129,7 +129,6 @@ print(cm)
 # 5. Model with important variables #################################
 plot(varImp(forest_full),20, scales=list(cex=1.1))
 
-########## ======== NOT DONE 01/07/2016 ========#######################################
 ## % variable extraction ######################
 imp <- varImp(forest_full)[[1]]
 imp_vars <- rownames(imp)[order(imp$Overall, decreasing=TRUE)]  ## Dint work on 01/07/16
@@ -206,7 +205,6 @@ prediction <- predict(forest_igr, newdata=test_data)
 cm <- confusionMatrix(prediction, test_data$Activity)
 print(cm)
 
-###########=========== Until here ==========####################################
 ## PCA ##############################################################
 pca_mod <- preProcess(train_data[,-1],
                       method="pca",
@@ -314,7 +312,7 @@ print(cm7)
 # Accuracy : 0.9386
 
 
-# Deeep learning 
+## Deeep learning ######################################
 
 
 library(h2o)
